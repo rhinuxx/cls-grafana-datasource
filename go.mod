@@ -1,4 +1,4 @@
-module github.com/tencentcloud/cls-grafana-datasource
+module github.com/tencentcloud/tencent-cls-grafana-datasource
 
 go 1.14
 
