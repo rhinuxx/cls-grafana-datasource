@@ -129,6 +129,30 @@ export class QueryEditor extends PureComponent<Props> {
             </InlineField>
           </InlineFieldRow>
         )}
+         {query.format === 'PrometheusFormat' && (
+          <InlineFieldRow>
+            <InlineField label="Metrics" labelWidth={12} tooltip="待预警的指标，只支持一个且为数值型">
+              <Input
+                placeholder="metrics"
+                value={query.metrics || ''}
+                data-key="metrics"
+                onChange={this.onInputChange}
+                onBlur={this.props.onRunQuery}
+                css={false}
+              />
+            </InlineField>
+            <InlineField label="MyLabels" labelWidth={64} tooltip="labels格式 k1:v1,k2:v2,k3:v3 (选填）">
+              <Input
+                placeholder="MyLabels"
+                value={query.myLabels || ''}
+                data-key="MyLabels"
+                onChange={this.onInputChange}
+                onBlur={this.props.onRunQuery}
+                css={false}
+              />
+            </InlineField>
+          </InlineFieldRow>
+        )}
       </div>
     )
   }

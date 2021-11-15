@@ -1,3 +1,7 @@
+# 和腾讯原版本的差异
+> 新增AlertTables panel 支持grafana8.2的alert格式
+> 更新原版Graph panel 支持grafana8.2的alert格式的lables
+
 # Grafana展示CLS数据
 
 日志服务CLS与Grafana打通，支持将CLS的原始日志数据与SQL聚合分析结果导出至Grafana展示。用户只需安装CLS日志服务grafana插件，在grafana填写检索分析的语句，即可在Grafana上展示结果。
@@ -90,6 +94,9 @@
    | Log panel             | log panel is used to shown log search result. Query syntax supports searching by keyword, fuzzy match. For more information, see [Syntax and Rules](https://intl.cloud.tencent.com/document/product/614/30439). Eg. status:400 | limit:用于指定返回日志检索结果条数                           |
    | Table panle           | Table panel will automatically show the results of whatever columns and rows your query returns | 无                                                           |
    | Graph,Pie,Gauge panel | In this pattern, there is a format transformation where data will be adapted to graph,pie,gauge panel | Metrics：待统计指标<br />Bucket：（选填）聚合列名称 <br />Time : （选填）若query返回结果为连续时间数据，则需指定 time 字段。若无，则不填写 |
+   | AlertTable panel | 在TablePanel的基础上返回值支持数值类型，而非字符类型，该格式支持grafana8.2最新预警格式|Metrics：待预警的指标，只支持一个且为数值型｜
+   
+   *注:支持AlertTable panel 的版本，Graph,Pie,Gauge panel 支持metrics和bucket作为标签输出用于支持grafana8.2最新预警格式*
 
 ## 示例
 
@@ -216,6 +223,17 @@ Format: Log Panel
 ![Datasource类型变量](https://main.qcloudimg.com/raw/d2b09b0ac278ac5387d40d0c3c3690d7.png)
 
 
+## grafana8.2 Alert支持
+### AlertTable panel 格式
+**配置查询语句，由于不支持表达式，所以在查询语句中进行预运算，将不需要预警的值直接设置为0**
+![AlertTable格式输入]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/alerttable-t1.png
+**输出的table中非数值字段作为labels，输出结果已经可以区分不同服务**
+![AlertTable格式告警输出]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/alerttable-t2.png
+### Graph,Pie,Gauge panel 格式
+**查询语句格式完全和原版一样**
+![Graph格式输入]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/graph-t1.png
+**无需任何修改即可支持lables（注：只支持一个metrics标签，一个bucket标签）**
+![Graph格式告警输出]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/graph-t2.png
 
 ## 日志查询与问题排查
 

@@ -77,7 +77,7 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 			newFieldName = fieldName
 		}
 		//加个labels type Labels map[string]string,也alert中没作用
-		lbs := "metrics:" + col
+		lbs := "metrics=" + col + ",bucket=" + fieldName
 		labels, _ := data.LabelsFromString(lbs)
 
 		colType := typeInfer(list[0][col])

@@ -5,10 +5,11 @@ export interface MyQuery extends DataQuery {
   Limit?: number
   Sort?: 'asc' | 'desc'
   // 解析使用字段
-  format?: 'Graph' | 'Table' | 'Log' | 'AlertTable'
+  format?: 'Graph' | 'Table' | 'Log' | 'AlertTable'| 'PrometheusFormat'
   timeSeriesKey?: string
   bucket?: string
   metrics?: string
+  myLabels?: string
 }
 
 /** MyQuery的运行时版本，用于将query中的不合法字段进去移除，保证query是个MyQuery类型的数据 */
@@ -20,6 +21,7 @@ export const myQueryRuntime: Required<MyQuery> = {
   timeSeriesKey: '',
   bucket: '',
   metrics: '',
+  myLabels: '',
 
   refId: '',
   hide: false,
