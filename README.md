@@ -1,5 +1,6 @@
 # 和腾讯原版本的差异
 > 新增AlertTables panel 支持grafana8.2的alert格式
+
 > 更新原版Graph panel 支持grafana8.2的alert格式的lables
 
 # Grafana展示CLS数据
@@ -224,15 +225,24 @@ Format: Log Panel
 
 
 ## grafana8.2 Alert支持
+
 ### AlertTable panel 格式
+
 **配置查询语句，由于不支持表达式，所以在查询语句中进行预运算，将不需要预警的值直接设置为0**
+
 ![AlertTable格式输入]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/alerttable-t1.png
+
 **输出的table中非数值字段作为labels，输出结果已经可以区分不同服务**
+
 ![AlertTable格式告警输出]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/alerttable-t2.png
+
 ### Graph,Pie,Gauge panel 格式
+
 **查询语句格式完全和原版一样**
+
 ![Graph格式输入]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/graph-t1.png
 **无需任何修改即可支持lables（注：只支持一个metrics标签，一个bucket标签）**
+
 ![Graph格式告警输出]https://raw.githubusercontent.com/rhinuxx/cls-grafana-datasource/master/src/img/graph-t2.png
 
 ## 日志查询与问题排查
