@@ -115,6 +115,20 @@ export class QueryEditor extends PureComponent<Props> {
             </InlineField>
           </InlineFieldRow>
         )}
+        {query.format === 'AlertTable' && (
+          <InlineFieldRow>
+            <InlineField label="Metrics" labelWidth={12} tooltip="待预警的指标，只支持一个且为数值型">
+              <Input
+                placeholder="metrics"
+                value={query.metrics || ''}
+                data-key="metrics"
+                onChange={this.onInputChange}
+                onBlur={this.props.onRunQuery}
+                css={false}
+              />
+            </InlineField>
+          </InlineFieldRow>
+        )}
       </div>
     )
   }

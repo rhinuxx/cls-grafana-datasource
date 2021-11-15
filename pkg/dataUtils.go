@@ -1,11 +1,12 @@
 package main
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/araddon/dateparse"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	cls "github.com/tencentcloud/tencent-cls-grafana-datasource/pkg/cls/v20201016"
-	"strconv"
-	"time"
 )
 
 func ArrayToMap(arr []*cls.LogItem) map[string]string {
@@ -75,6 +76,10 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 		if len(fieldName) > 0 {
 			newFieldName = fieldName
 		}
+		//加个labels type Labels map[string]string,也alert中没作用
+		lbs := "metrics:" + col
+		labels, _ := data.LabelsFromString(lbs)
+
 		colType := typeInfer(list[0][col])
 		switch colType {
 		case "int64":
@@ -88,7 +93,7 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 						m = append(m, num)
 					}
 				}
-				frame.Fields = append(frame.Fields, data.NewField(newFieldName, nil, m))
+				frame.Fields = append(frame.Fields, data.NewField(newFieldName, labels, m))
 			}
 		case "float64":
 			{
@@ -101,7 +106,7 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 						m = append(m, num)
 					}
 				}
-				frame.Fields = append(frame.Fields, data.NewField(newFieldName, nil, m))
+				frame.Fields = append(frame.Fields, data.NewField(newFieldName, labels, m))
 			}
 		case "string":
 			{
@@ -109,7 +114,7 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 				for _, v := range list {
 					m = append(m, v[col])
 				}
-				frame.Fields = append(frame.Fields, data.NewField(newFieldName, nil, m))
+				frame.Fields = append(frame.Fields, data.NewField(newFieldName, labels, m))
 			}
 		}
 	}
@@ -124,6 +129,57 @@ func TransferRecordToTable(list []map[string]string, colNames []string, refId st
 			colValues = append(colValues, item[col])
 		}
 		frame.Fields = append(frame.Fields, data.NewField(col, nil, colValues))
+	}
+	return []*data.Frame{frame}
+}
+func TransferRecordToAlertTable(list []map[string]string, colNames []string, metricName string, refId string) []*data.Frame {
+	frame := data.NewFrame(refId)
+	for _, col := range colNames {
+		if col == metricName { //如果col是metric，colValues转为数值型
+			colType := typeInfer(list[0][col])
+			switch colType {
+			case "int64":
+				{
+					var m []int64
+					for _, v := range list {
+						num, numErr := strconv.ParseInt(v[col], 10, 64)
+						if numErr != nil {
+							m = append(m, 0)
+						} else {
+							m = append(m, num)
+						}
+					}
+					frame.Fields = append(frame.Fields, data.NewField(col, nil, m))
+				}
+			case "float64":
+				{
+					var m []float64
+					for _, v := range list {
+						num, numErr := strconv.ParseFloat(v[col], 64)
+						if numErr != nil {
+							m = append(m, 0)
+						} else {
+							m = append(m, num)
+						}
+					}
+					frame.Fields = append(frame.Fields, data.NewField(col, nil, m))
+				}
+			case "string":
+				{
+					var m []string
+					for _, v := range list {
+						m = append(m, v[col])
+					}
+					frame.Fields = append(frame.Fields, data.NewField(col, nil, m))
+				}
+			}
+		} else {
+			var colValues []string
+			for _, item := range list {
+				colValues = append(colValues, item[col])
+			}
+			frame.Fields = append(frame.Fields, data.NewField(col, nil, colValues))
+		}
 	}
 	return []*data.Frame{frame}
 }

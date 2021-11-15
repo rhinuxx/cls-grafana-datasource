@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	cls "github.com/tencentcloud/tencent-cls-grafana-datasource/pkg/cls/v20201016"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	cls "github.com/tencentcloud/tencent-cls-grafana-datasource/pkg/cls/v20201016"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
@@ -162,6 +163,22 @@ func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jso
 	case "Log":
 		{
 			dataRes.Frames = GetLog(searchLogResult.Results, query.RefID)
+		}
+	case "AlertTable":
+		{
+			if *searchLogResult.Analysis {
+				var logItems []map[string]string
+				for _, v := range searchLogResult.AnalysisResults {
+					logItems = append(logItems, ArrayToMap(v.Data))
+				}
+				var colNames []string
+				for _, col := range searchLogResult.ColNames {
+					colNames = append(colNames, *col)
+				}
+				dataRes.Frames = TransferRecordToAlertTable(logItems, colNames, qm.Metrics, query.RefID)
+			} else {
+				dataRes.Frames = GetLog(searchLogResult.Results, query.RefID)
+			}
 		}
 	}
 	return dataRes

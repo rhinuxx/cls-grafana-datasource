@@ -5,7 +5,7 @@ export interface MyQuery extends DataQuery {
   Limit?: number
   Sort?: 'asc' | 'desc'
   // 解析使用字段
-  format?: 'Graph' | 'Table' | 'Log'
+  format?: 'Graph' | 'Table' | 'Log' | 'AlertTable'
   timeSeriesKey?: string
   bucket?: string
   metrics?: string
