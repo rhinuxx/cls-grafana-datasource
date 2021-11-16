@@ -34,6 +34,11 @@ export class QueryEditor extends PureComponent<Props> {
     this.partialOnChange({ format: val.value })
     onRunQuery()
   }
+  onEnableLabelsChange = (val: SelectableValue) => {
+    const { onRunQuery } = this.props
+    this.partialOnChange({ enablelabels: val.value })
+    onRunQuery()
+  }
 
   render() {
     const query = _.defaults(this.props.query, defaultQuery)
@@ -94,6 +99,13 @@ export class QueryEditor extends PureComponent<Props> {
                 onChange={this.onInputChange}
                 onBlur={this.props.onRunQuery}
                 css={false}
+              />
+            </InlineField>   
+            <InlineField label="Labels" labelWidth={8} tooltip="是否开启labels显示，该选项用于兼容grafana8.2的alert功能">
+            <Select
+              onChange={this.onEnableLabelsChange}
+              value={query.enablelabels}
+              options={Constants.QueryEditorLabelsOptions}
               />
             </InlineField>
           </InlineFieldRow>

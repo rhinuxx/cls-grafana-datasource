@@ -38,20 +38,21 @@ func Aggregate(list []map[string]string,
 	aggregateKey string,
 	timeSeriesKey string,
 	refId string,
+	enablelabels string,
 ) []*data.Frame {
 	var frames []*data.Frame
 	if len(aggregateKey) > 0 {
 		groupedData := GroupBy(list, aggregateKey)
 		for k, v := range groupedData {
-			frames = append(frames, TransferRecordToFrame(v, metricNames, timeSeriesKey, "", k))
+			frames = append(frames, TransferRecordToFrame(v, metricNames, timeSeriesKey, "", k, enablelabels))
 		}
 	} else {
-		frames = append(frames, TransferRecordToFrame(list, metricNames, timeSeriesKey, refId, ""))
+		frames = append(frames, TransferRecordToFrame(list, metricNames, timeSeriesKey, refId, "", enablelabels))
 	}
 	return frames
 }
 
-func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeriesKey string, framaName string, fieldName string) *data.Frame {
+func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeriesKey string, framaName string, fieldName string, enablelabels string) *data.Frame {
 	frame := data.NewFrame(framaName)
 	if len(list) == 0 {
 		return frame
@@ -77,8 +78,12 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 			newFieldName = fieldName
 		}
 		//加个labels type Labels map[string]string,也alert中没作用
-		lbs := "metrics=" + col + ",bucket=" + fieldName
-		labels, _ := data.LabelsFromString(lbs)
+		var labels data.Labels
+
+		if enablelabels == "YES" {
+			lbs := "metrics=" + col + ",bucket=" + fieldName
+			labels, _ = data.LabelsFromString(lbs)
+		}
 
 		colType := typeInfer(list[0][col])
 		switch colType {

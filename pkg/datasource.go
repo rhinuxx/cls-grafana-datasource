@@ -92,6 +92,7 @@ type queryModel struct {
 	TimeSeriesKey string `json:"timeSeriesKey,omitempty"`
 	Bucket        string `json:"bucket,omitempty"`
 	Metrics       string `json:"metrics,omitempty"`
+	EnableLabels  string `json:"enablelabels,omitempty"`
 }
 
 func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jsonData *dsJsonData, camOpts CamOpts) backend.DataResponse {
@@ -139,7 +140,7 @@ func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jso
 						}
 					}
 				}
-				dataRes.Frames = Aggregate(logItems, metricNames, qm.Bucket, qm.TimeSeriesKey, query.RefID)
+				dataRes.Frames = Aggregate(logItems, metricNames, qm.Bucket, qm.TimeSeriesKey, query.RefID, qm.EnableLabels)
 			} else {
 				dataRes.Frames = GetLog(searchLogResult.Results, query.RefID)
 			}

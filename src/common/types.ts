@@ -10,6 +10,7 @@ export interface MyQuery extends DataQuery {
   bucket?: string
   metrics?: string
   myLabels?: string
+  enablelabels?: 'NO' | 'YES'
 }
 
 /** MyQuery的运行时版本，用于将query中的不合法字段进去移除，保证query是个MyQuery类型的数据 */
@@ -22,6 +23,8 @@ export const myQueryRuntime: Required<MyQuery> = {
   bucket: '',
   metrics: '',
   myLabels: '',
+  enablelabels: 'NO',
+
 
   refId: '',
   hide: false,
