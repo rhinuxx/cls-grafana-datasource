@@ -46,6 +46,7 @@ func NewSearchLogRequest() (request *SearchLogRequest) {
 	request = &SearchLogRequest{
 		BaseRequest: &tchttp.BaseRequest{},
 	}
+
 	request.Init().WithApiInfo("cls", APIVersion, "SearchLog")
 	return
 }

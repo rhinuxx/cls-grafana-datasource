@@ -1,10 +1,13 @@
 package main
 
 import (
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	cls "github.com/tencentcloud/tencent-cls-grafana-datasource/pkg/cls/v20201016"
 )
@@ -125,6 +128,41 @@ func TransferRecordToFrame(list []map[string]string, colNames []string, timeSeri
 	}
 	return frame
 }
+func TransferRecordToLog(logs []map[string]string, refId string) []*data.Frame {
+	frame := data.NewFrame(refId)
+	frame.Meta = &data.FrameMeta{
+		PreferredVisualization: data.VisTypeLogs,
+	}
+
+	var times []time.Time
+	var values []string
+	for _, alog := range logs {
+		message := ""
+		var keys []string
+		for k := range alog {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := alog[k]
+			if k == "__time__" {
+				floatValue, err := strconv.ParseFloat(v, 9)
+				if err != nil {
+					log.DefaultLogger.Error("BuildLogs", "ParseTime", err)
+					continue
+				}
+				times = append(times, time.Unix(int64(floatValue), 0))
+			}
+			message = message + k + `="` + strings.ReplaceAll(v, `"`, `'`) + `" `
+		}
+		values = append(values, message)
+	}
+	frame.Fields = append(frame.Fields,
+		data.NewField("time", nil, times),
+		data.NewField("values", nil, values),
+	)
+	return []*data.Frame{frame}
+}
 
 func TransferRecordToTable(list []map[string]string, colNames []string, refId string) []*data.Frame {
 	frame := data.NewFrame(refId)
@@ -140,7 +178,7 @@ func TransferRecordToTable(list []map[string]string, colNames []string, refId st
 func TransferRecordToAlertTable(list []map[string]string, colNames []string, metricName string, refId string) []*data.Frame {
 	frame := data.NewFrame(refId)
 	for _, col := range colNames {
-		if col == metricName { //如果col是metric，colValues转为数值型
+		if col == metricName && len(list) > 0 { //如果col是metric，colValues转为数值型 //有个bug 需要先判断一下是否有数据
 			colType := typeInfer(list[0][col])
 			switch colType {
 			case "int64":
@@ -186,11 +224,18 @@ func TransferRecordToAlertTable(list []map[string]string, colNames []string, met
 			frame.Fields = append(frame.Fields, data.NewField(col, nil, colValues))
 		}
 	}
+	if len(list) == 0 {
+		var m []int64
+		frame.Fields = append(frame.Fields, data.NewField("nodata", nil, m))
+	}
 	return []*data.Frame{frame}
 }
 
 func GetLog(logInfos []*cls.LogInfo, refId string) []*data.Frame {
 	frame := data.NewFrame(refId)
+	frame.Meta = &data.FrameMeta{
+		PreferredVisualization: data.VisTypeLogs,
+	}
 	var timeValues []time.Time
 	var logValues []string
 

@@ -24,7 +24,7 @@ func newDatasource() datasource.ServeOpts {
 	// creates a instance manager for your plugin. The function passed
 	// into `NewInstanceManger` is called when the instance is created
 	// for the first time or when a datasource configuration changed.
-	im := datasource.NewInstanceManager(newDataSourceInstance)
+	im := datasource.NewInstanceManager(newDataSourceInstance) //newDataSourceInstance函数返回datasource的结构，对应grafana数据库中datasource表
 	ds := &clsDatasource{
 		im: im,
 	}
@@ -51,6 +51,10 @@ type clsDatasource struct {
 
 const (
 	MaxQueryDataConcurrentGoroutines = 20 // 每个TopicId拥有一个容量为20的并发池
+)
+const (
+	aliyunsls  = "AliYunSLS"
+	tencentcls = "TencentCloudCLS"
 )
 
 // TopicId为key, 并发池为value
@@ -95,6 +99,18 @@ type queryModel struct {
 	EnableLabels  string `json:"enablelabels,omitempty"`
 }
 
+/*
+为了不改变腾讯云日志的查询格式，将topicID集合了更多的信息
+日志提供商（腾讯云或阿里云）#区域（region｜endpoint）#日志主题（topicid｜project）#阿里云的日志存储点（logstore）
+*/
+func combineTopicId(jsonData *dsJsonData) string {
+	if jsonData.Provider == aliyunsls {
+		return jsonData.Provider + "#" + jsonData.EndPoint + "#" + jsonData.Project + "#" + jsonData.LogStore
+	} else {
+		return tencentcls + "#" + jsonData.Region + "#" + jsonData.TopicId
+	}
+}
+
 func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jsonData *dsJsonData, camOpts CamOpts) backend.DataResponse {
 	// Unmarshal the json into our queryModel
 	var qm queryModel
@@ -105,7 +121,7 @@ func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jso
 	}
 
 	requestParam := cls.SearchLogRequest{
-		TopicId: common.StringPtr(jsonData.TopicId),
+		TopicId: common.StringPtr(combineTopicId(jsonData)), // TopicId封装一下表示 region/endpoint#topicid/project#空/logstore
 		From:    common.Int64Ptr(query.TimeRange.From.UnixNano() / 1e6),
 		To:      common.Int64Ptr(query.TimeRange.To.UnixNano() / 1e6),
 		Query:   common.StringPtr(qm.Query),
@@ -114,8 +130,11 @@ func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jso
 	if qm.Format == "Log" {
 		requestParam.Limit = common.Int64Ptr(qm.Limit)
 	}
-	searchLogResponse, searchLogErr := SearchLog(ctx, &requestParam, jsonData.Region, camOpts)
+
+	searchLogResponse, searchLogErr := SearchLog(ctx, &requestParam, jsonData.Region, camOpts, jsonData.Logproxy)
+
 	log.DefaultLogger.Info("CLS_API_INFO", Stringify(query), Stringify(searchLogResponse))
+
 	if searchLogErr != nil {
 		log.DefaultLogger.Error("CLS_API_ERROR", Stringify(query), Stringify(searchLogErr))
 		dataRes.Error = searchLogErr
@@ -163,7 +182,16 @@ func (td *clsDatasource) query(ctx context.Context, query backend.DataQuery, jso
 		}
 	case "Log":
 		{
-			dataRes.Frames = GetLog(searchLogResult.Results, query.RefID)
+			if *searchLogResult.Analysis { //支持日志代理返回阿里云log类型依旧会格式化成Analysistrue的格式
+				var logItems []map[string]string
+				for _, v := range searchLogResult.AnalysisResults {
+					logItems = append(logItems, ArrayToMap(v.Data))
+				}
+
+				dataRes.Frames = TransferRecordToLog(logItems, query.RefID)
+			} else {
+				dataRes.Frames = GetLog(searchLogResult.Results, query.RefID)
+			}
 		}
 	case "AlertTable":
 		{
@@ -199,12 +227,12 @@ func (td *clsDatasource) CheckHealth(ctx context.Context, req *backend.CheckHeal
 	}
 
 	_, err = SearchLog(ctx, &cls.SearchLogRequest{
-		TopicId: common.StringPtr(jsonData.TopicId),
+		TopicId: common.StringPtr(combineTopicId(jsonData)),
 		From:    common.Int64Ptr(time.Now().AddDate(0, 0, -1).UnixNano() / 1e6),
 		To:      common.Int64Ptr(time.Now().UnixNano() / 1e6),
 		Query:   common.StringPtr(""),
 		Limit:   common.Int64Ptr(1),
-	}, jsonData.Region, camOpts)
+	}, jsonData.Region, camOpts, jsonData.Logproxy)
 
 	var status = backend.HealthStatusOk
 	var message = "CheckHealth Success"

@@ -11,3 +11,7 @@ export const QueryEditorLabelsOptions = [
   { value: 'NO', label: 'Disable' }, // 默认不开启标签
   { value: 'YES', label: 'Enable' }, // 支持grafana8.2告警需要开启标签
 ]
+export const DataSourceProviderFormatOptions = [
+  { value: 'AliYunSLS', label: '阿里云-SLS' }, // 
+  { value: 'TencentCloudCLS', label: '腾讯云-CLS' }, // 将原始日志或分析结果转化为Table
+]

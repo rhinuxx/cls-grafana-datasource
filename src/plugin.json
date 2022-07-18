@@ -1,21 +1,21 @@
 {
   "type": "datasource",
-  "name": "Tencent CLS Datasource",
-  "id": "tencent-cls-grafana-datasource",
+  "name": "Combi Log Search",
+  "id": "tencentcls-aliyunsls-grafana-datasource",
   "logs": true,
   "metrics": true,
   "backend": true,
   "alerting": true,
   "executable": "cls-datasource",
   "info": {
-    "description": "Tencent Cloud Log Service datasource plugin",
+    "description": "Tencent Cloud & AliYun  Log Service datasource plugin",
     "author": {
-      "name": "Tencent Cloud"
+      "name": "Tencent Cloud/Feishu"
     },
     "keywords": ["datasource", "TencentCloud", "cls"],
     "logos": {
-      "small": "img/logo.svg",
-      "large": "img/logo.svg"
+      "small": "img/CBSlog.svg",
+      "large": "img/CBSlog.svg"
     },
     "links": [
       {
@@ -32,8 +32,8 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": "7.x.x",
-    "grafanaVersion": "7.x.x",
+    "grafanaDependency": "8.x.x",
+    "grafanaVersion": "8.x.x",
     "plugins": []
   }
 }

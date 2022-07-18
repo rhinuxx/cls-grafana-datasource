@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	cls "github.com/tencentcloud/tencent-cls-grafana-datasource/pkg/cls/v20201016"
@@ -17,14 +18,19 @@ var intranetCpf = profile.NewClientProfile()
 
 func init() {
 	intranetCpf.HttpProfile.RootDomain = "internal.tencentcloudapi.com"
+	cpf.HttpProfile.Scheme = "HTTP"
+	//cpf.HttpProfile.RootDomain = "localhost:8080"
+	//cpf.HttpProfile.Endpoint = localhost:8080/searchlog
 }
 
 var limiter = rate.NewLimiter(10, 10)
 
-func SearchLog(ctx context.Context, param *cls.SearchLogRequest, region string, opts CamOpts) (response *cls.SearchLogResponse, err error) {
+func SearchLog(ctx context.Context, param *cls.SearchLogRequest, region string, opts CamOpts, logproxy string) (response *cls.SearchLogResponse, err error) {
 	_ = limiter.Wait(ctx)
 
 	credential := common.NewTokenCredential(opts.SecretId, opts.SecretKey, opts.SecretToken)
+	cpf.HttpProfile.Endpoint = logproxy
+	log.DefaultLogger.Info("TEST-INFO:log proxy endpoint:", logproxy)
 	var client, _ = cls.NewClient(credential, region, cpf)
 	if opts.Intranet {
 		client, _ = cls.NewClient(credential, region, intranetCpf)
@@ -53,6 +59,12 @@ type dsJsonData struct {
 	Region   string `json:"region"`
 	TopicId  string `json:"topicId"`
 	Intranet bool   `json:"intranet"`
+	//以下是支持阿里云的服务信息
+	EndPoint string `json:"endpoint"`
+	Project  string `json:"project"`
+	LogStore string `json:"logstore"`
+	Provider string `json:"provider"`
+	Logproxy string `json:"logproxy"`
 }
 
 // CamOpts 与特定请求无关的通用请求数据，主要用于鉴权
@@ -71,6 +83,7 @@ func GetApiOpts(instanceSettings backend.DataSourceInstanceSettings) (camOpts Ca
 
 	secretId := instanceSettings.DecryptedSecureJSONData["secretId"]
 	secretKey := instanceSettings.DecryptedSecureJSONData["secretKey"]
+
 	var token string
 
 	if RoleInstance && secretId == "" && secretKey == "" {

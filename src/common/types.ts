@@ -43,11 +43,19 @@ export const defaultQuery: Partial<MyQuery> = {
  * These are options configured for each DataSource instance
  */
 export interface MyDataSourceOptions extends DataSourceJsonData {
+  provider?: 'AliYunSLS' | 'TencentCloudCLS'
+  logproxy: string
   region: string
   logsetId?: string
   topicId: string
   /** 是否使用腾讯云API内网接入点 */
   intranet?: boolean
+  /** 阿里云配置信息 */
+  endpoint: string
+  project: string
+  logstore: string
+
+
 }
 
 /**
